@@ -116,18 +116,56 @@ class HomePage extends StatelessWidget {
 
             SizedBox(height: 10),
 
-            ListView.builder(
-              shrinkWrap: true,
-              physics: NeverScrollableScrollPhysics(),
-              itemCount: 5, // Example item count
-              itemBuilder: (context, index) {
-                return ListTile(
-                  leading: Icon(Icons.money, color: Colors.green),
-                  title: Text('Transaction ${index + 1}'),
-                  subtitle: Text('Details of transaction ${index + 1}'),
-                  trailing: Text('Rp 100.000'),
-                );
-              },
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: Card(
+                elevation: 10,
+                child: ListTile(
+                  trailing: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(Icons.delete),
+                      SizedBox(width: 10),
+                      Icon(Icons.edit),
+                    ],
+                  ),
+                  title: Text('Rp 200.000'),
+                  subtitle: Text('Makan Siang'),
+                  leading: Container(
+                    child: Icon(Icons.upload, color: Colors.red),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: Card(
+                elevation: 10,
+                child: ListTile(
+                  trailing: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(Icons.delete),
+                      SizedBox(width: 10),
+                      Icon(Icons.edit),
+                    ],
+                  ),
+                  title: Text('Rp 20.000.000'),
+                  subtitle: Text('Gaji Bulanan'),
+                  leading: Container(
+                    child: Icon(Icons.download, color: Colors.green),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                  ),
+                ),
+              ),
             ),
           ],
         ),
