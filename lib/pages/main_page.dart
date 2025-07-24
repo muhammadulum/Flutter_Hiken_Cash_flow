@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:hiken_cash_flow/pages/category_page.dart';
 import 'package:hiken_cash_flow/pages/home_page.dart';
+import 'package:hiken_cash_flow/pages/transaction_page.dart';
 
 class MainPage extends StatefulWidget {
   const MainPage({super.key});
@@ -58,7 +59,13 @@ class _nameState extends State<MainPage> {
         visible: _currentIndex == 0 ? true : false,
         child: FloatingActionButton(
           onPressed: () {
-            // Action for the floating action button
+            Navigator.of(context)
+                .push(
+                  MaterialPageRoute(builder: (context) => TransactionPage()),
+                )
+                .then((value) {
+                  setState(() {});
+                }); // Action for the floating action button
           },
           backgroundColor: Colors.blueAccent,
           child: Icon(Icons.add),
