@@ -1,0 +1,22 @@
+Tabel
+
+1. categories
+    -id
+    -name
+    -type
+    -created_at
+    -updated_at
+    -deleted_at
+
+2. transaction
+    -id
+    -name
+    -categories_id
+    -transaction_date
+    -amount
+    -created_at
+    -updated_at
+    -deleted_at
+
+
+dart run build_runner build
