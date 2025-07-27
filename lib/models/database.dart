@@ -14,7 +14,12 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase([QueryExecutor? executor]) : super(executor ?? _openConnection());
 
   @override
-  int get schemaVersion => 1;
+  int get schemaVersion => 2;
+
+  Future<List<Category>> getAllCategoriesRepo(int type) async {
+    return await (select(categories)
+      ..where((tbl) => tbl.type.equals(type))).get();
+  }
 
   static QueryExecutor _openConnection() {
     return driftDatabase(
@@ -27,4 +32,18 @@ class AppDatabase extends _$AppDatabase {
       // If you need web support, see https://drift.simonbinder.eu/platforms/web/
     );
   }
+
+  @override
+  MigrationStrategy get migration => MigrationStrategy(
+    onCreate: (Migrator m) async {
+      // Buat semua tabel
+      await m.createAll();
+    },
+    onUpgrade: (Migrator m, int from, int to) async {
+      // Tambah kolom baru jika upgrade dari versi lama
+      if (from == 1) {
+        await m.addColumn(categories, categories.type);
+      }
+    },
+  );
 }
