@@ -1,41 +1,77 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:hiken_cash_flow/models/database.dart';
+import 'package:hiken_cash_flow/database/db_helper.dart';
 
 class CategoryPage extends StatefulWidget {
   const CategoryPage({super.key});
 
   @override
-  State<CategoryPage> createState() => _nameState();
+  State<CategoryPage> createState() => _CategoryPageState();
 }
 
-class _nameState extends State<CategoryPage> {
+class _CategoryPageState extends State<CategoryPage> {
   bool isExpense = true;
-  final AppDatabase database = AppDatabase();
+  final TextEditingController nameController = TextEditingController();
 
-  TextEditingController nameController = TextEditingController();
+  final DBHelper dbHelper = DBHelper();
 
-  Future insert(String name, int type) async {
-    DateTime now = DateTime.now();
+  Future<void> insert(String name, int type) async {
+    final now = DateTime.now();
+    final data = {
+      'name': name,
+      'type': type,
+      'created_at': now.toIso8601String(),
+      'updated_at': now.toIso8601String(),
+      'deleted_at': null,
+    };
 
-    final row = await database
-        .into(database.categories)
-        .insertReturning(
-          CategoriesCompanion.insert(
-            name: name,
-            type: type,
-            createdAt: now,
-            updatedAt: now,
+    final id = await dbHelper.insertCategory(data);
+    print('Inserted category with id: $id');
+    setState(() {}); // refresh UI
+  }
+
+  Future<List<Map<String, dynamic>>> getCategories(int type) async {
+    return await dbHelper.getCategories(type);
+  }
+
+  Future<void> deleteCategory(int id) async {
+    await dbHelper.deleteCategory(id);
+    setState(() {}); // refresh UI
+  }
+
+  //edit
+  void editCategoryDialog(int id, String oldName) {
+    TextEditingController editController = TextEditingController(text: oldName);
+
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text('Edit Category'),
+          content: TextFormField(
+            controller: editController,
+            decoration: const InputDecoration(labelText: 'Category Name'),
           ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Cancel'),
+            ),
+            ElevatedButton(
+              onPressed: () async {
+                await dbHelper.updateCategory(id, editController.text);
+                Navigator.pop(context);
+                setState(() {});
+              },
+              child: const Text('Save'),
+            ),
+          ],
         );
-    print('Inserted category with id: ${row.id}');
+      },
+    );
   }
 
-  Future<List<Category>> getCategories(int type) async {
-    return await database.getAllCategoriesRepo(type);
-  }
-
-  void OpenDialog() {
+  void openDialog() {
     showDialog(
       context: context,
       builder: (BuildContext context) {
@@ -51,27 +87,23 @@ class _nameState extends State<CategoryPage> {
                       color: (isExpense) ? Colors.red : Colors.green,
                     ),
                   ),
-                  SizedBox(height: 20),
+                  const SizedBox(height: 20),
                   TextFormField(
                     controller: nameController,
-                    decoration: InputDecoration(
+                    decoration: const InputDecoration(
                       labelText: 'Enter Name',
                       border: OutlineInputBorder(),
                       hintText: 'Enter Name',
                     ),
                   ),
-                  SizedBox(height: 20),
+                  const SizedBox(height: 20),
                   ElevatedButton(
                     onPressed: () {
-                      // Call the insert function with the entered name and type
                       insert(nameController.text, isExpense ? 1 : 2);
                       Navigator.of(context, rootNavigator: true).pop('dialog');
-                      setState(() {
-                        nameController
-                            .clear(); // Clear the text field after saving
-                      });
+                      nameController.clear();
                     },
-                    child: Text('Save'),
+                    child: const Text('Save'),
                   ),
                 ],
               ),
@@ -105,23 +137,22 @@ class _nameState extends State<CategoryPage> {
                 ),
                 IconButton(
                   onPressed: () {
-                    OpenDialog();
+                    openDialog();
                   },
-                  icon: Icon(Icons.add),
+                  icon: const Icon(Icons.add),
                 ),
               ],
             ),
           ),
-
-          FutureBuilder<List<Category>>(
+          FutureBuilder<List<Map<String, dynamic>>>(
             future: getCategories(isExpense ? 1 : 2),
             builder: (context, snapshot) {
               if (snapshot.connectionState == ConnectionState.waiting) {
-                return Center(child: CircularProgressIndicator());
+                return const Center(child: CircularProgressIndicator());
               } else if (snapshot.hasError) {
                 return Center(child: Text('Error: ${snapshot.error}'));
               } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-                return Center(child: Text('No categories found.'));
+                return const Center(child: Text('No categories found.'));
               } else {
                 final categories = snapshot.data!;
                 return Expanded(
@@ -136,20 +167,33 @@ class _nameState extends State<CategoryPage> {
                           child: ListTile(
                             leading:
                                 (isExpense)
-                                    ? Icon(Icons.upload, color: Colors.red)
-                                    : Icon(Icons.download, color: Colors.green),
-                            title: Text(category.name),
+                                    ? const Icon(
+                                      Icons.upload,
+                                      color: Colors.red,
+                                    )
+                                    : const Icon(
+                                      Icons.download,
+                                      color: Colors.green,
+                                    ),
+                            title: Text(category['name']),
                             trailing: Row(
                               mainAxisSize: MainAxisSize.min,
                               children: [
                                 IconButton(
-                                  onPressed: () {},
-                                  icon: Icon(Icons.delete),
+                                  onPressed: () {
+                                    deleteCategory(category['id']);
+                                  }, // TODO: delete
+                                  icon: const Icon(Icons.delete),
                                 ),
-                                SizedBox(width: 10),
+                                const SizedBox(width: 10),
                                 IconButton(
-                                  onPressed: () {},
-                                  icon: Icon(Icons.edit),
+                                  onPressed: () {
+                                    editCategoryDialog(
+                                      category['id'],
+                                      category['name'],
+                                    );
+                                  }, // TODO: edit
+                                  icon: const Icon(Icons.edit),
                                 ),
                               ],
                             ),
@@ -162,28 +206,6 @@ class _nameState extends State<CategoryPage> {
               }
             },
           ),
-
-          // Padding(
-          //   padding: const EdgeInsets.symmetric(horizontal: 16),
-          //   child: Card(
-          //     elevation: 10,
-          //     child: ListTile(
-          //       leading:
-          //           (isExpense)
-          //               ? Icon(Icons.upload, color: Colors.red)
-          //               : Icon(Icons.download, color: Colors.green),
-          //       title: Text('Category 1'),
-          //       trailing: Row(
-          //         mainAxisSize: MainAxisSize.min,
-          //         children: [
-          //           IconButton(onPressed: () {}, icon: Icon(Icons.delete)),
-          //           SizedBox(width: 10),
-          //           IconButton(onPressed: () {}, icon: Icon(Icons.edit)),
-          //         ],
-          //       ),
-          //     ),
-          //   ),
-          // ),
         ],
       ),
     );
