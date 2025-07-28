@@ -1,1 +1,2 @@
 hiken to muhammadulum
+"C:\Users\666hi\AppData\Local\Android\Sdk\emulator\emulator.exe" -avd Emulator_HPKecil
